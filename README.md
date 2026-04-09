@@ -1,0 +1,5 @@
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.112-green)
+![LangChain](https://img.shields.io/badge/LangChain-0.2-orange)
+![Claude](https://img.shields.io/badge/Claude-Vision-purple)
+![License](https://img.shields.io/badge/License-MIT-yellow)
