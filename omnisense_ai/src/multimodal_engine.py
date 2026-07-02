@@ -18,7 +18,7 @@ from typing import Optional
 
 import anthropic
 import openai
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage
 
