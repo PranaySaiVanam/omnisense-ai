@@ -143,7 +143,7 @@ class MultimodalEngine:
             self.model  = model or "gpt-4o"
             self.client = openai.OpenAI()
         elif provider == LLMProvider.GEMINI:
-            self.model  = model or "gemini-1.5-flash"
+            self.model  = model or "gemini-3.5-flash"
             import google.generativeai as genai
             import os
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
