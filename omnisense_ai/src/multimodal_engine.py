@@ -39,6 +39,7 @@ class AnalysisMode(str, Enum):
 class LLMProvider(str, Enum):
     ANTHROPIC = "anthropic"
     OPENAI    = "openai"
+    GEMINI    = "gemini"
 
 
 @dataclass
@@ -120,7 +121,7 @@ def encode_image_base64(image_path: str) -> tuple[str, str]:
 
 class MultimodalEngine:
     """
-    Unified multimodal analysis engine supporting Claude Vision and GPT-4 Vision.
+    Unified multimodal analysis engine supporting Claude Vision, GPT-4 Vision, and Gemini.
     Handles text-only, image-only, and combined text+image inputs.
     """
 
@@ -138,9 +139,15 @@ class MultimodalEngine:
         if provider == LLMProvider.ANTHROPIC:
             self.model  = model or "claude-opus-4-5"
             self.client = anthropic.Anthropic()
-        else:
+        elif provider == LLMProvider.OPENAI:
             self.model  = model or "gpt-4o"
             self.client = openai.OpenAI()
+        elif provider == LLMProvider.GEMINI:
+            self.model  = model or "gemini-1.5-flash"
+            import google.generativeai as genai
+            import os
+            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+            self.client = genai.GenerativeModel(model_name=self.model)
 
         logger.info(f"MultimodalEngine initialized: {provider} / {self.model}")
 
@@ -174,8 +181,10 @@ class MultimodalEngine:
 
         if self.provider == LLMProvider.ANTHROPIC:
             result_text, tokens = self._call_claude(system, user_text, image_path)
-        else:
+        elif self.provider == LLMProvider.OPENAI:
             result_text, tokens = self._call_openai(system, user_text, image_path)
+        else:
+            result_text, tokens = self._call_gemini(system, user_text, image_path)
 
         latency = (time.time() - start) * 1000
 
@@ -190,6 +199,38 @@ class MultimodalEngine:
             latency_ms = round(latency, 2),
             metadata   = {"model": self.model, "temperature": self.temperature},
         )
+
+    def _call_gemini(
+        self,
+        system    : str,
+        user_text : str,
+        image_path: Optional[str],
+    ) -> tuple[str, int]:
+        """Send a vision-enabled request to Gemini."""
+        import google.generativeai as genai
+        from PIL import Image
+
+        model = genai.GenerativeModel(
+            model_name=self.model,
+            system_instruction=system,
+            generation_config={"temperature": self.temperature}
+        )
+
+        contents = []
+        if image_path:
+             img = Image.open(image_path)
+             contents.append(img)
+        contents.append(user_text)
+
+        response = model.generate_content(contents)
+
+        tokens = 0
+        if hasattr(response, 'usage_metadata') and response.usage_metadata:
+             tokens = response.usage_metadata.total_token_count
+        else:
+             tokens = len(user_text.split()) + len(response.text.split())
+
+        return response.text, tokens
 
     # ── Provider: Anthropic Claude ───────────────────────────────────────────
 

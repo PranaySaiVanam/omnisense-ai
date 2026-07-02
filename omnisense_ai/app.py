@@ -42,9 +42,9 @@ with st.sidebar:
 
     provider = st.selectbox(
         "LLM Provider",
-        options=["anthropic", "openai"],
+        options=["anthropic", "openai", "gemini"],
         index=0,
-        help="Claude Vision (Anthropic) or GPT-4o (OpenAI)",
+        help="Claude Vision (Anthropic), GPT-4o (OpenAI), or Gemini (Google)",
     )
 
     mode = st.selectbox(
